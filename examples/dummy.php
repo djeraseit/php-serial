@@ -1,12 +1,15 @@
 <?php
-include 'PhpSerial.php';
+
+include __DIR__.'/../src/Serial.php';
+
+$serial = \Sanchescom\Serial\Serial::setDevice('COM5');
 
 // Let's start the class
-$serial = new PhpSerial;
+$serial = new Serial;
 
 // First we must specify the device. This works on both linux and windows (if
 // your linux serial device is /dev/ttyS0 for COM1, etc)
-$serial->deviceSet("COM1");
+$serial->deviceSet("COM5");
 
 // We can change the baud rate, parity, length, stop bits, flow control
 $serial->confBaudRate(2400);

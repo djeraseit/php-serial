@@ -1,23 +1,41 @@
 <?php
-define ("SERIAL_DEVICE_NOTSET", 0);
-define ("SERIAL_DEVICE_SET", 1);
-define ("SERIAL_DEVICE_OPENED", 2);
+
+namespace Sanchescom\Serial;
+
+use Sanchescom\Serial\Contracts\CommandInterface;
+use Sanchescom\Serial\Exceptions\UnknownSystemException;
+use Sanchescom\Serial\Systems\AbstractOperationSystem;
+use Sanchescom\Serial\Systems\Darwin;
+use Sanchescom\Serial\Systems\Linux;
+use Sanchescom\Serial\Systems\Windows;
 
 /**
- * Serial port control class
- *
- * THIS PROGRAM COMES WITH ABSOLUTELY NO WARRANTIES !
- * USE IT AT YOUR OWN RISKS !
- *
- * @author Rémy Sanchez <remy.sanchez@hyperthese.net>
- * @author Rizwan Kassim <rizwank@geekymedia.com>
- * @thanks Aurélien Derouineau for finding how to open serial ports with windows
- * @thanks Alec Avedisyan for help and testing with reading
- * @thanks Jim Wright for OSX cleanup/fixes.
- * @copyright under GPL 2 licence
+ * Class Serial.
  */
-class PhpSerial
+class Serial
 {
+    /** @var string */
+    const OS_LINUX = 'Linux';
+
+    /** @var string */
+    const OS_DARWIN = 'Darwin';
+
+    /** @var string */
+    const OS_WINDOWS = 'Windows';
+
+    /** @var string */
+    protected static $commandClass = Command::class;
+
+    /** @var string */
+    protected static $phpOperationSystem = PHP_OS_FAMILY;
+
+    /** @var array */
+    protected static $systems = [
+        self::OS_LINUX => Linux::class,
+        self::OS_DARWIN => Darwin::class,
+        self::OS_WINDOWS => Windows::class,
+    ];
+
     public $_device = null;
     public $_winDevice = null;
     public $_dHandle = null;
@@ -34,43 +52,54 @@ class PhpSerial
     public $autoFlush = true;
 
     /**
-     * Constructor. Perform some checks about the OS and setserial
+     * @param string $device
      *
-     * @return PhpSerial
+     * @return AbstractOperationSystem
      */
-    public function PhpSerial()
+    public static function setDevice(string $device)
     {
-        setlocale(LC_ALL, "en_US");
-
-        $sysName = php_uname();
-
-        if (substr($sysName, 0, 5) === "Linux") {
-            $this->_os = "linux";
-
-            if ($this->_exec("stty") === 0) {
-                register_shutdown_function(array($this, "deviceClose"));
-            } else {
-                trigger_error(
-                    "No stty availible, unable to run.",
-                    E_USER_ERROR
-                );
-            }
-        } elseif (substr($sysName, 0, 6) === "Darwin") {
-            $this->_os = "osx";
-            register_shutdown_function(array($this, "deviceClose"));
-        } elseif (substr($sysName, 0, 7) === "Windows") {
-            $this->_os = "windows";
-            register_shutdown_function(array($this, "deviceClose"));
-        } else {
-            trigger_error("Host OS is neither osx, linux nor windows, unable " .
-                          "to run.", E_USER_ERROR);
-            exit();
-        }
+        return (new static())->getSystemInstance()->setDevice($device);
     }
 
-    //
-    // OPEN/CLOSE DEVICE SECTION -- {START}
-    //
+    /**
+     * @param string $commandClass
+     */
+    public static function setCommandClass(string $commandClass): void
+    {
+        self::$commandClass = $commandClass;
+    }
+
+    /**
+     * @param string $phpOperationSystem
+     */
+    public static function setPhpOperationSystem(string $phpOperationSystem): void
+    {
+        self::$phpOperationSystem = $phpOperationSystem;
+    }
+
+    /**
+     * Getting instance on network collections depended on operation system.
+     *
+     * @throws \Sanchescom\Serial\Exceptions\UnknownSystemException
+     *
+     * @return \Sanchescom\Serial\Systems\AbstractOperationSystem
+     */
+    protected function getSystemInstance(): AbstractOperationSystem
+    {
+        if (!array_key_exists(static::$phpOperationSystem, static::$systems)) {
+            throw new UnknownSystemException();
+        }
+
+        return new static::$systems[static::$phpOperationSystem]($this->getCommandInstance());
+    }
+
+    /**
+     * @return \Sanchescom\Serial\Contracts\CommandInterface
+     */
+    protected function getCommandInstance(): CommandInterface
+    {
+        return new static::$commandClass();
+    }
 
     /**
      * Device set function : used to set the device name/address.

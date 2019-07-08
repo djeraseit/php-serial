@@ -49,7 +49,7 @@ if ($the_input == '') {
 include 'PhpSerial.php';
 
 // Let's start the class
-$serial = new PhpSerial;
+$serial = new Serial;
 
 // First we must specify the device. This works on both linux and windows (if
 // your linux serial device is /dev/ttyS0 for COM1, etc)
