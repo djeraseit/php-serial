@@ -7,15 +7,15 @@ namespace Sanchescom\Serial\Exceptions;
 use RuntimeException;
 
 /**
- * Class UnknownSystem.
+ * Class UnknownSystemException.
  */
 class UnknownSystemException extends RuntimeException
 {
     /**
-     * UnknownSystem constructor.
+     * UnknownSystemException constructor.
      */
     public function __construct()
     {
-        parent::__construct("Operation system doesn't support: ".PHP_OS);
+        parent::__construct("Operation system doesn't support: ".PHP_OS_FAMILY);
     }
 }

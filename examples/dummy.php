@@ -2,7 +2,22 @@
 
 include __DIR__.'/../src/Serial.php';
 
-$serial = \Sanchescom\Serial\Serial::setDevice('COM5');
+$serial = new \Sanchescom\Serial\Serial();
+try {
+    $device = $serial->setDevice('COM5');
+    $device->setBaudRate(2400);
+    $device->setParity("none");
+    $device->setCharacterLength(8);
+    $device->setStopBits(1);
+    $device->setFlowControl("none");
+    $device->open();
+    $device->send('Hello!');
+    $read = $device->read();
+    $device->close();
+} catch (Exception $e) {
+
+}
+
 
 // Let's start the class
 $serial = new Serial;
