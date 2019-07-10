@@ -10,10 +10,27 @@ use Sanchescom\Serial\Exceptions\ClosingException;
 use Sanchescom\Serial\Exceptions\InvalidDeviceException;
 use Sanchescom\Serial\Exceptions\InvalidHandleException;
 use Sanchescom\Serial\Exceptions\InvalidModeException;
+use Sanchescom\Serial\Exceptions\InvalidRateException;
 use Sanchescom\Serial\Exceptions\SendingException;
 
 abstract class AbstractSystem implements DeviceInterface, SystemInterface
 {
+    /** @var array */
+    protected static $validBauds = [
+        110    => 11,
+        150    => 15,
+        300    => 30,
+        600    => 60,
+        1200   => 12,
+        2400   => 24,
+        4800   => 48,
+        9600   => 96,
+        19200  => 19,
+        38400  => 38400,
+        57600  => 57600,
+        115200 => 115200,
+    ];
+
     /** @var \Sanchescom\Serial\Contracts\ExecutorInterface */
     protected $executor;
 
@@ -41,8 +58,8 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
      */
     public function __construct(ExecutorInterface $executor, string $device)
     {
-        $this->executor = $executor;
-        $this->device = $device;
+        $this->setExecutor($executor);
+        $this->setDevice($device);
     }
 
     /** {@inheritdoc} */
@@ -120,15 +137,15 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
     }
 
     /**
-    * Set a setserial parameter (cf man setserial)
-    * NO MORE USEFUL !
-    * 	-> No longer supported
-    * 	-> Only use it if you need it
-    *
-    * @param  string $param parameter name
-    * @param  string $arg   parameter value
-    *
-    * @return bool
+     * Set a setserial parameter (cf man setserial)
+     * NO MORE USEFUL !
+     * 	-> No longer supported
+     * 	-> Only use it if you need it
+     *
+     * @param  string $param parameter name
+     * @param  string $arg   parameter value
+     *
+     * @return bool
     */
     public function setSerialFlag($param, $arg = "")
     {
@@ -144,6 +161,18 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
 
         return true;
     }
+
+    /**
+     * Device set function : used to set the device name/address.
+     * -> linux : use the device address, like /dev/ttyS0
+     * -> osx : use the device address, like /dev/tty.serial
+     * -> windows : use the COMxx device name, like COM1 (can also be used with linux)
+     *
+     * @param  string $device the name of the device to be used
+     *
+     * @return void
+     */
+    abstract protected function setDevice(string $device);
 
     /**
      * @param mixed $handel
@@ -167,6 +196,21 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
     protected function unsetHandle()
     {
         $this->handel = null;
+    }
+
+    /**
+     * @param ExecutorInterface $executor
+     */
+    protected function setExecutor(ExecutorInterface $executor): void
+    {
+        $this->executor = $executor;
+    }
+
+    protected function throwExceptionInvalidRate($rate)
+    {
+        if (!isset(self::$validBauds[$rate])) {
+            throw new InvalidRateException($rate);
+        }
     }
 
     protected function throwExceptionInvalidMode($mode)

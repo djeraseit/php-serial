@@ -11,7 +11,7 @@ use Sanchescom\Serial\Exceptions\CommandException;
 class Executor implements ExecutorInterface
 {
     /** {@inheritdoc} */
-    public function command(string $command, &$out = null)
+    public function command(string $command)
     {
         $desc = [
             1 => ["pipe", "w"],
@@ -20,19 +20,19 @@ class Executor implements ExecutorInterface
 
         $process = proc_open($command, $desc, $pipes);
 
-        $ret = stream_get_contents($pipes[1]);
-        $err = stream_get_contents($pipes[2]);
+        $return = stream_get_contents($pipes[1]);
+        $error = stream_get_contents($pipes[2]);
 
         fclose($pipes[1]);
         fclose($pipes[2]);
 
         $result = proc_close($process);
 
-        if (func_num_args() == 2) {
-            $out = [$ret, $err];
+        if ($result !== 0) {
+            throw new CommandException($command, $error, $return);
         }
 
-        return $result;
+        return $return;
     }
 
     /** {@inheritdoc} */

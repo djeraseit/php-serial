@@ -89,129 +89,6 @@ class Serial
     }
 
     /**
-     * Device set function : used to set the device name/address.
-     * -> linux : use the device address, like /dev/ttyS0
-     * -> osx : use the device address, like /dev/tty.serial
-     * -> windows : use the COMxx device name, like COM1 (can also be used
-     *     with linux)
-     *
-     * @param  string $device the name of the device to be used
-     * @return bool
-     */
-    public function deviceSet($device)
-    {
-        if ($this->_dState !== SERIAL_DEVICE_OPENED) {
-            if ($this->_os === "linux") {
-                if (preg_match("@^COM(\\d+):?$@i", $device, $matches)) {
-                    $device = "/dev/ttyS" . ($matches[1] - 1);
-                }
-
-                if ($this->_exec("stty -F " . $device) === 0) {
-                    $this->_device = $device;
-                    $this->_dState = SERIAL_DEVICE_SET;
-
-                    return true;
-                }
-            } elseif ($this->_os === "osx") {
-                if ($this->_exec("stty -f " . $device) === 0) {
-                    $this->_device = $device;
-                    $this->_dState = SERIAL_DEVICE_SET;
-
-                    return true;
-                }
-            } elseif ($this->_os === "windows") {
-                if (preg_match("@^COM(\\d+):?$@i", $device, $matches)
-                        and $this->_exec(
-                            exec("mode " . $device . " xon=on BAUD=9600")
-                        ) === 0
-                ) {
-                    $this->_winDevice = "COM" . $matches[1];
-                    $this->_device = "\\.com" . $matches[1];
-                    $this->_dState = SERIAL_DEVICE_SET;
-
-                    return true;
-                }
-            }
-
-            trigger_error("Specified serial port is not valid", E_USER_WARNING);
-
-            return false;
-        } else {
-            trigger_error("You must close your device before to set an other " .
-                          "one", E_USER_WARNING);
-
-            return false;
-        }
-    }
-
-    /**
-     * Configure the Baud Rate
-     * Possible rates : 110, 150, 300, 600, 1200, 2400, 4800, 9600, 38400,
-     * 57600 and 115200.
-     *
-     * @param  int  $rate the rate to set the port in
-     * @return bool
-     */
-    public function confBaudRate($rate)
-    {
-        if ($this->_dState !== SERIAL_DEVICE_SET) {
-            trigger_error("Unable to set the baud rate : the device is " .
-                          "either not set or opened", E_USER_WARNING);
-
-            return false;
-        }
-
-        $validBauds = array (
-            110    => 11,
-            150    => 15,
-            300    => 30,
-            600    => 60,
-            1200   => 12,
-            2400   => 24,
-            4800   => 48,
-            9600   => 96,
-            19200  => 19,
-            38400  => 38400,
-            57600  => 57600,
-            115200 => 115200
-        );
-
-        if (isset($validBauds[$rate])) {
-            if ($this->_os === "linux") {
-                $ret = $this->_exec(
-                    "stty -F " . $this->_device . " " . (int) $rate,
-                    $out
-                );
-            } elseif ($this->_os === "osx") {
-                $ret = $this->_exec(
-                    "stty -f " . $this->_device . " " . (int) $rate,
-                    $out
-                );
-            } elseif ($this->_os === "windows") {
-                $ret = $this->_exec(
-                    "mode " . $this->_winDevice . " BAUD=" . $validBauds[$rate],
-                    $out
-                );
-            } else {
-                return false;
-            }
-
-            if ($ret !== 0) {
-                trigger_error(
-                    "Unable to set baud rate: " . $out[1],
-                    E_USER_WARNING
-                );
-
-                return false;
-            }
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
      * Configure parity.
      * Modes : odd, even, none
      *
@@ -220,15 +97,6 @@ class Serial
      */
     public function confParity($parity)
     {
-        if ($this->_dState !== SERIAL_DEVICE_SET) {
-            trigger_error(
-                "Unable to set parity : the device is either not set or opened",
-                E_USER_WARNING
-            );
-
-            return false;
-        }
-
         $args = array(
             "none" => "-parenb",
             "odd"  => "parenb parodd",
@@ -257,14 +125,6 @@ class Serial
                 $out
             );
         }
-
-        if ($ret === 0) {
-            return true;
-        }
-
-        trigger_error("Unable to set parity : " . $out[1], E_USER_WARNING);
-
-        return false;
     }
 
     /**
@@ -275,13 +135,6 @@ class Serial
      */
     public function confCharacterLength($int)
     {
-        if ($this->_dState !== SERIAL_DEVICE_SET) {
-            trigger_error("Unable to set length of a character : the device " .
-                          "is either not set or opened", E_USER_WARNING);
-
-            return false;
-        }
-
         $int = (int) $int;
         if ($int < 5) {
             $int = 5;
@@ -305,17 +158,6 @@ class Serial
                 $out
             );
         }
-
-        if ($ret === 0) {
-            return true;
-        }
-
-        trigger_error(
-            "Unable to set character length : " .$out[1],
-            E_USER_WARNING
-        );
-
-        return false;
     }
 
     /**
@@ -328,13 +170,6 @@ class Serial
      */
     public function confStopBits($length)
     {
-        if ($this->_dState !== SERIAL_DEVICE_SET) {
-            trigger_error("Unable to set the length of a stop bit : the " .
-                          "device is either not set or opened", E_USER_WARNING);
-
-            return false;
-        }
-
         if ($length != 1
                 and $length != 2
                 and $length != 1.5
@@ -366,17 +201,6 @@ class Serial
                 $out
             );
         }
-
-        if ($ret === 0) {
-            return true;
-        }
-
-        trigger_error(
-            "Unable to set stop bit length : " . $out[1],
-            E_USER_WARNING
-        );
-
-        return false;
     }
 
     /**
@@ -390,13 +214,6 @@ class Serial
      */
     public function confFlowControl($mode)
     {
-        if ($this->_dState !== SERIAL_DEVICE_SET) {
-            trigger_error("Unable to set flow control mode : the device is " .
-                          "either not set or opened", E_USER_WARNING);
-
-            return false;
-        }
-
         $linuxModes = array(
             "none"     => "clocal -crtscts -ixon -ixoff",
             "rts/cts"  => "-clocal crtscts -ixon -ixoff",
@@ -429,17 +246,6 @@ class Serial
                 "mode " . $this->_winDevice . " " . $windowsModes[$mode],
                 $out
             );
-        }
-
-        if ($ret === 0) {
-            return true;
-        } else {
-            trigger_error(
-                "Unable to set flow control : " . $out[1],
-                E_USER_ERROR
-            );
-
-            return false;
         }
     }
 }
