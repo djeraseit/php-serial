@@ -2,21 +2,18 @@
 
 namespace Sanchescom\Serial\Systems;
 
-use RuntimeException;
 use Sanchescom\Serial\Contracts\DeviceInterface;
 use Sanchescom\Serial\Contracts\ExecutorInterface;
 use Sanchescom\Serial\Contracts\SystemInterface;
-use Sanchescom\Serial\Exceptions\ClosingException;
-use Sanchescom\Serial\Exceptions\InvalidDeviceException;
-use Sanchescom\Serial\Exceptions\InvalidHandleException;
-use Sanchescom\Serial\Exceptions\InvalidModeException;
-use Sanchescom\Serial\Exceptions\InvalidRateException;
-use Sanchescom\Serial\Exceptions\SendingException;
 
 abstract class AbstractSystem implements DeviceInterface, SystemInterface
 {
+    use HasThrows;
+
+    /** @var int */
     const DEFAULT_READ_INDEX = 0;
 
+    /** @var int */
     const DEFAULT_READ_LENGTH = 128;
 
     /** @var array */
@@ -143,7 +140,7 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
      * @param  string $param parameter name
      * @param  string $arg   parameter value
      *
-     * @return bool
+     * @return void
     */
     public function setSerialFlag($param, $arg = "")
     {
@@ -151,13 +148,9 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
 
         $return = $this->executor->program("setserial {$this->device} {$param} {$arg}");
 
-        if ($return[0] === "I") {
-            throw new RuntimeException("setserial: Invalid flag", E_USER_WARNING);
-        } elseif ($return[0] === "/") {
-            throw new RuntimeException("setserial: Error with device file", E_USER_WARNING);
-        }
+        $this->throwExceptionInvalidFlag($return);
 
-        return true;
+        $this->throwExceptionErrorDevice($return);
     }
 
     /**
@@ -181,6 +174,14 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
     }
 
     /**
+     * @param ExecutorInterface $executor
+     */
+    protected function setExecutor(ExecutorInterface $executor): void
+    {
+        $this->executor = $executor;
+    }
+
+    /**
      * @return void
      */
     protected function clearBuffer()
@@ -194,55 +195,5 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
     protected function unsetHandle()
     {
         $this->handel = null;
-    }
-
-    /**
-     * @param ExecutorInterface $executor
-     */
-    protected function setExecutor(ExecutorInterface $executor): void
-    {
-        $this->executor = $executor;
-    }
-
-    protected function throwExceptionInvalidRate($rate)
-    {
-        if (!isset(self::$validBauds[$rate])) {
-            throw new InvalidRateException($rate);
-        }
-    }
-
-    protected function throwExceptionInvalidMode($mode)
-    {
-        if (!preg_match("@^[raw]\\+?b?$@", $mode)) {
-            throw new InvalidModeException($mode);
-        }
-    }
-
-    protected function throwExceptionClosing($pointer)
-    {
-        if ($pointer === false) {
-            throw new ClosingException();
-        }
-    }
-
-    protected function throwExceptionSending($pointer)
-    {
-        if ($pointer === false) {
-            throw new SendingException();
-        }
-    }
-
-    protected function throwExceptionInvalidHandle()
-    {
-        if (!$this->handel) {
-            throw new InvalidHandleException();
-        }
-    }
-
-    protected function throwExceptionInvalidDevice()
-    {
-        if (!$this->device) {
-            throw new InvalidDeviceException();
-        }
     }
 }
