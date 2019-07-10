@@ -15,6 +15,10 @@ use Sanchescom\Serial\Exceptions\SendingException;
 
 abstract class AbstractSystem implements DeviceInterface, SystemInterface
 {
+    const DEFAULT_READ_INDEX = 0;
+
+    const DEFAULT_READ_LENGTH = 128;
+
     /** @var array */
     protected static $validBauds = [
         110    => 11,
@@ -106,22 +110,16 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
         $this->throwExceptionInvalidHandle();
 
         $content = "";
+        $length = self::DEFAULT_READ_LENGTH;
+        $index = self::DEFAULT_READ_INDEX;
 
-        $i = 0;
+        do {
+            if ($count !== self::DEFAULT_READ_INDEX && $index > $count) {
+                $length = $count - $index;
+            }
 
-        if ($count !== 0) {
-            do {
-                if ($i > $count) {
-                    $content .= fread($this->handel, ($count - $i));
-                } else {
-                    $content .= fread($this->handel, 128);
-                }
-            } while (($i += 128) === strlen($content));
-        } else {
-            do {
-                $content .= fread($this->handel, 128);
-            } while (($i += 128) === strlen($content));
-        }
+            $content .= fread($this->handel, $length);
+        } while (($index += self::DEFAULT_READ_LENGTH) === strlen($content));
 
         return $content;
     }
