@@ -130,31 +130,26 @@ class Serial
     /**
      * Sets the length of a character.
      *
-     * @param  int  $int length of a character (5 <= length <= 8)
+     * @param  int  $length length of a character (5 <= length <= 8)
      * @return bool
      */
-    public function confCharacterLength($int)
+    public function confCharacterLength(int $length)
     {
-        $int = (int) $int;
-        if ($int < 5) {
-            $int = 5;
-        } elseif ($int > 8) {
-            $int = 8;
-        }
+
 
         if ($this->_os === "linux") {
             $ret = $this->_exec(
-                "stty -F " . $this->_device . " cs" . $int,
+                "stty -F " . $this->_device . " cs" . $length,
                 $out
             );
         } elseif ($this->_os === "osx") {
             $ret = $this->_exec(
-                "stty -f " . $this->_device . " cs" . $int,
+                "stty -f " . $this->_device . " cs" . $length,
                 $out
             );
         } else {
             $ret = $this->_exec(
-                "mode " . $this->_winDevice . " DATA=" . $int,
+                "mode " . $this->_winDevice . " DATA=" . $length,
                 $out
             );
         }
@@ -170,10 +165,7 @@ class Serial
      */
     public function confStopBits($length)
     {
-        if ($length != 1
-                and $length != 2
-                and $length != 1.5
-                and !($length == 1.5 and $this->_os === "linux")
+        if ($length != 1 && $length != 2 && $length != 1.5 && !($length == 1.5 && $this->_os === "linux")
         ) {
             trigger_error(
                 "Specified stop bit length is invalid",

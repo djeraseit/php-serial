@@ -16,7 +16,7 @@ interface DeviceInterface
 
     public function setParity($parity);
 
-    public function setCharacterLength($int);
+    public function setCharacterLength(int $length);
 
     public function setStopBits($length);
 

@@ -153,6 +153,44 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
         $this->throwExceptionErrorDevice($return);
     }
 
+    public function setBaudRate(int $rate)
+    {
+        $this->throwExceptionInvalidRate($rate);
+        $this->throwExceptionInvalidDevice();
+
+        $this->executeBaudRate($rate);
+    }
+
+    public function setParity($parity)
+    {
+        $this->throwExceptionInvalidDevice();
+    }
+
+    public function setCharacterLength(int $length)
+    {
+        $this->throwExceptionInvalidDevice();
+
+        if ($length < 5) {
+            $length = 5;
+        }
+
+        if ($length > 8) {
+            $length = 8;
+        }
+
+        $this->executeCharacterLength($length);
+    }
+
+    public function setStopBits($length)
+    {
+        $this->throwExceptionInvalidDevice();
+    }
+
+    public function setFlowControl($mode)
+    {
+        $this->throwExceptionInvalidDevice();
+    }
+
     /**
      * Device set function : used to set the device name/address.
      * -> linux : use the device address, like /dev/ttyS0
@@ -164,6 +202,10 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
      * @return void
      */
     abstract protected function setDevice(string $device);
+
+    abstract protected function executeBaudRate(int $rate);
+
+    abstract protected function executeCharacterLength(int $length);
 
     /**
      * @param mixed $handel

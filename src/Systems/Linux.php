@@ -4,12 +4,14 @@ namespace Sanchescom\Serial\Systems;
 
 class Linux extends AbstractSystem
 {
-    public function setBaudRate(int $rate)
+    protected function executeBaudRate(int $rate)
     {
-        $this->throwExceptionInvalidRate($rate);
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("stty -F {$this->device} {$rate}");
+    }
 
-        $this->executor->command("stty -f {$this->device} {$rate}");
+    protected function executeCharacterLength(int $length)
+    {
+        $this->executor->command("stty -F {$this->device} cs {$length}");
     }
 
     public function setParity($parity)
