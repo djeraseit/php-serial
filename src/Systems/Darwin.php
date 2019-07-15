@@ -4,39 +4,49 @@ namespace Sanchescom\Serial\Systems;
 
 class Darwin extends AbstractSystem
 {
-    public function setBaudRate($rate)
-    {
-        $this->throwExceptionInvalidRate($rate);
-        $this->throwExceptionInvalidDevice();
+    use UnixTrait;
 
-        $this->executor->command("stty -F {$this->device} {$rate}");
+    protected function executeBaudRate(int $rate)
+    {
+        $this->executor->command("stty -f {$this->device} {$rate}");
     }
 
-    public function setParity($parity)
+    protected function executeParity(int $parity)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("stty -f {$this->device} " . self::$partyArgs[$parity]);
     }
 
-    public function setCharacterLength($int)
+    protected function executeCharacterLength(int $length)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("stty -f {$this->device} cs {$length}");
     }
 
-    public function setStopBits($length)
+    protected function executeStopBits(float $length)
     {
-        $this->throwExceptionInvalidDevice();
+        $prefix = (($length == 1) ? "-" : "");
+
+        $this->executor->command("stty -f {$this->device} {$prefix}cstopb");
     }
 
-    public function setFlowControl($mode)
+    protected function executeFlowControl(string $mode)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("stty -f {$this->device} " . self::$flowControls[$mode]);
     }
 
-    /** {@inheritdoc}*/
+    /** {@inheritdoc} */
     protected function setDevice(string $device)
     {
         if ($this->executor->command("stty -f {$device}") === 0) {
             $this->device = $device;
         }
+    }
+
+    /**
+     * @param string $device
+     * @param string $mode
+     */
+    protected function setHandel(string $device, string $mode)
+    {
+        $this->handel = fopen($device, $mode);
     }
 }

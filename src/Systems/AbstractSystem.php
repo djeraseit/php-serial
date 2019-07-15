@@ -2,19 +2,33 @@
 
 namespace Sanchescom\Serial\Systems;
 
-use Sanchescom\Serial\Contracts\DeviceInterface;
+use Sanchescom\Serial\Contracts\ConfigInterface;
 use Sanchescom\Serial\Contracts\ExecutorInterface;
 use Sanchescom\Serial\Contracts\SystemInterface;
 
-abstract class AbstractSystem implements DeviceInterface, SystemInterface
+abstract class AbstractSystem implements ConfigInterface, SystemInterface
 {
-    use HasThrows;
+    use ExceptionTrait;
 
     /** @var int */
     const DEFAULT_READ_INDEX = 0;
 
     /** @var int */
     const DEFAULT_READ_LENGTH = 128;
+
+    /** @var int */
+    const MIN_CHARACTER_LENGTH = 5;
+
+    /** @var int */
+    const MAX_CHARACTER_LENGTH = 8;
+
+    protected static $flowControls = [];
+
+    protected static $validStopBitsLength = [
+        1,
+        1.5,
+        2,
+    ];
 
     /** @var array */
     protected static $validBauds = [
@@ -30,6 +44,12 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
         38400  => 38400,
         57600  => 57600,
         115200 => 115200,
+    ];
+
+    protected static $partyArgs = [
+        "none" => "-parenb",
+        "odd"  => "parenb parodd",
+        "even" => "parenb -parodd",
     ];
 
     /** @var \Sanchescom\Serial\Contracts\ExecutorInterface */
@@ -70,7 +90,7 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
 
         $this->throwExceptionInvalidDevice();
 
-        $this->setHandel(fopen($this->device, $mode));
+        $this->setHandel($this->device, $mode);
 
         $this->throwExceptionInvalidHandle();
 
@@ -131,64 +151,60 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
         $this->clearBuffer();
     }
 
-    /**
-     * Set a setserial parameter (cf man setserial)
-     * NO MORE USEFUL !
-     * 	-> No longer supported
-     * 	-> Only use it if you need it
-     *
-     * @param  string $param parameter name
-     * @param  string $arg   parameter value
-     *
-     * @return void
-    */
-    public function setSerialFlag($param, $arg = "")
-    {
-        $this->throwExceptionInvalidDevice();
-
-        $return = $this->executor->program("setserial {$this->device} {$param} {$arg}");
-
-        $this->throwExceptionInvalidFlag($return);
-
-        $this->throwExceptionErrorDevice($return);
-    }
-
+    /** {@inheritdoc}*/
     public function setBaudRate(int $rate)
     {
         $this->throwExceptionInvalidRate($rate);
+
         $this->throwExceptionInvalidDevice();
 
         $this->executeBaudRate($rate);
     }
 
+    /** {@inheritdoc}*/
     public function setParity($parity)
     {
+        $this->throwExceptionInvalidParity($parity);
+
         $this->throwExceptionInvalidDevice();
+
+        $this->executeParity($parity);
     }
 
+    /** {@inheritdoc}*/
     public function setCharacterLength(int $length)
     {
         $this->throwExceptionInvalidDevice();
 
-        if ($length < 5) {
-            $length = 5;
+        if ($length < self::MIN_CHARACTER_LENGTH) {
+            $length = self::MIN_CHARACTER_LENGTH;
         }
 
-        if ($length > 8) {
-            $length = 8;
+        if ($length > self::MAX_CHARACTER_LENGTH) {
+            $length = self::MAX_CHARACTER_LENGTH;
         }
 
         $this->executeCharacterLength($length);
     }
 
+    /** {@inheritdoc}*/
     public function setStopBits($length)
     {
         $this->throwExceptionInvalidDevice();
+
+        $this->throwExceptionStopBit($length);
+
+        $this->executeStopBits($length);
     }
 
+    /** {@inheritdoc}*/
     public function setFlowControl($mode)
     {
         $this->throwExceptionInvalidDevice();
+
+        $this->throwExceptionInvalidFlowControl($mode);
+
+        $this->executeFlowControl($mode);
     }
 
     /**
@@ -203,17 +219,23 @@ abstract class AbstractSystem implements DeviceInterface, SystemInterface
      */
     abstract protected function setDevice(string $device);
 
+    /**
+     * @param string $device
+     * @param string $mode
+     *
+     * @return mixed
+     */
+    abstract protected function setHandel(string $device, string $mode);
+
     abstract protected function executeBaudRate(int $rate);
+
+    abstract protected function executeParity(int $parity);
 
     abstract protected function executeCharacterLength(int $length);
 
-    /**
-     * @param mixed $handel
-     */
-    protected function setHandel($handel)
-    {
-        $this->handel = $handel;
-    }
+    abstract protected function executeStopBits(float $length);
+
+    abstract protected function executeFlowControl(string $mode);
 
     /**
      * @param ExecutorInterface $executor

@@ -2,21 +2,43 @@
 
 namespace Sanchescom\Serial\Systems;
 
-use Sanchescom\Serial\Exception\Flags\ErrorDeviceException;
-use Sanchescom\Serial\Exception\Flags\InvalidFlagException;
 use Sanchescom\Serial\Exceptions\ClosingException;
 use Sanchescom\Serial\Exceptions\InvalidDeviceException;
+use Sanchescom\Serial\Exceptions\InvalidFlowControlException;
 use Sanchescom\Serial\Exceptions\InvalidHandleException;
 use Sanchescom\Serial\Exceptions\InvalidModeException;
+use Sanchescom\Serial\Exceptions\InvalidParityException;
 use Sanchescom\Serial\Exceptions\InvalidRateException;
+use Sanchescom\Serial\Exceptions\InvalidStopBitException;
 use Sanchescom\Serial\Exceptions\SendingException;
 
-trait HasThrows
+trait ExceptionTrait
 {
     protected function throwExceptionInvalidRate($rate)
     {
         if (!isset(self::$validBauds[$rate])) {
             throw new InvalidRateException($rate);
+        }
+    }
+
+    protected function throwExceptionInvalidParity($parity)
+    {
+        if (!isset(self::$partyArgs[$parity])) {
+            throw new InvalidParityException($parity);
+        }
+    }
+
+    protected function throwExceptionInvalidFlowControl($mode)
+    {
+        if (!isset(self::$flowControls[$mode])) {
+            throw new InvalidFlowControlException($mode);
+        }
+    }
+
+    protected function throwExceptionStopBit($length)
+    {
+        if (!in_array($length, self::$validStopBitsLength)) {
+            throw new InvalidStopBitException($length);
         }
     }
 
@@ -52,20 +74,6 @@ trait HasThrows
     {
         if (!$this->device) {
             throw new InvalidDeviceException();
-        }
-    }
-
-    protected function throwExceptionInvalidFlag(string $return)
-    {
-        if ($return[0] === "I") {
-            throw new InvalidFlagException();
-        }
-    }
-
-    protected function throwExceptionErrorDevice(string $return)
-    {
-        if ($return[0] === "/") {
-            throw new ErrorDeviceException();
         }
     }
 }

@@ -7,17 +7,17 @@ namespace Sanchescom\Serial\Exceptions;
 use RuntimeException;
 
 /**
- * Class InvalidRateException.
+ * Class InvalidParityException.
  */
-class InvalidRateException extends RuntimeException
+class InvalidParityException extends RuntimeException
 {
     /**
-     * InvalidRateException constructor.
+     * InvalidParityException constructor.
      *
      * @param string $parity
      */
     public function __construct(string $parity)
     {
-        parent::__construct("Invalid bound rate : {$parity}.");
+        parent::__construct("Invalid parity: {$parity}.");
     }
 }

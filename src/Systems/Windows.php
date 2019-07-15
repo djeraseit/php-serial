@@ -4,32 +4,35 @@ namespace Sanchescom\Serial\Systems;
 
 class Windows extends AbstractSystem
 {
-    public function setBaudRate(int $rate)
-    {
-        $this->throwExceptionInvalidRate($rate);
-        $this->throwExceptionInvalidDevice();
+    protected static $flowControls = [
+        "none"     => "xon=off octs=off rts=on",
+        "rts/cts"  => "xon=off octs=on rts=hs",
+        "xon/xoff" => "xon=on octs=off rts=on",
+    ];
 
-        $this->executor->command("mode {$this->device} BAUD=" . self::$validBauds[$rate]);
+    protected function executeBaudRate(int $rate)
+    {
+        $this->executor->command("mode {$this->device} BAUD=".self::$validBauds[$rate]);
     }
 
-    public function setParity($parity)
+    protected function executeParity(int $parity)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command( "mode {$this->device} PARITY=".$parity[0]);
     }
 
-    public function setCharacterLength($int)
+    protected function executeCharacterLength(int $length)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("mode {$this->device} DATA={$length}");
     }
 
-    public function setStopBits($length)
+    protected function executeStopBits(float $length)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("mode {$this->device} STOP={$length}");
     }
 
-    public function setFlowControl($mode)
+    protected function executeFlowControl(string $mode)
     {
-        $this->throwExceptionInvalidDevice();
+        $this->executor->command("mode {$this->device} ".self::$flowControls[$mode]);
     }
 
     /** {@inheritdoc}*/
@@ -40,5 +43,14 @@ class Windows extends AbstractSystem
         ) {
             $this->device = "COM" . $matches[1];
         }
+    }
+
+    /**
+     * @param string $device
+     * @param string $mode
+     */
+    protected function setHandel(string $device, string $mode)
+    {
+        $this->handel = fopen("\\." . strtolower($device), $mode);
     }
 }
