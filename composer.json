@@ -1,7 +1,7 @@
 {
     "name": "sanchescom/php-serial",
     "description": "Multi-platform serial port access convenience class",
-    "license": "GNU GPLv2",
+    "license": "GPL-3.0",
     "authors": [
         {
             "name": "Alexander Efimov",
