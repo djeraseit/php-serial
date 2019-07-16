@@ -5,7 +5,12 @@ namespace Sanchescom\Serial\Systems;
 use Sanchescom\Serial\Contracts\ConfigInterface;
 use Sanchescom\Serial\Contracts\ExecutorInterface;
 use Sanchescom\Serial\Contracts\SystemInterface;
+use Sanchescom\Serial\Exceptions\ClosingException;
+use Sanchescom\Serial\Exceptions\SendingException;
 
+/**
+ * Class AbstractSystem.
+ */
 abstract class AbstractSystem implements ConfigInterface, SystemInterface
 {
     use ExceptionTrait;
@@ -22,8 +27,10 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     /** @var int */
     const MAX_CHARACTER_LENGTH = 8;
 
+    /** @var array */
     protected static $flowControls = [];
 
+    /** @var array */
     protected static $validStopBitsLength = [
         1,
         1.5,
@@ -32,23 +39,23 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
 
     /** @var array */
     protected static $validBauds = [
-        110    => 11,
-        150    => 15,
-        300    => 30,
-        600    => 60,
-        1200   => 12,
-        2400   => 24,
-        4800   => 48,
-        9600   => 96,
-        19200  => 19,
-        38400  => 38400,
-        57600  => 57600,
+        110 => 11,
+        150 => 15,
+        300 => 30,
+        600 => 60,
+        1200 => 12,
+        2400 => 24,
+        4800 => 48,
+        9600 => 96,
+        19200 => 19,
+        38400 => 38400,
+        57600 => 57600,
         115200 => 115200,
     ];
 
     protected static $partyArgs = [
         "none" => "-parenb",
-        "odd"  => "parenb parodd",
+        "odd" => "parenb parodd",
         "even" => "parenb -parodd",
     ];
 
@@ -92,9 +99,7 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
 
         $this->setHandel($this->device, $mode);
 
-        $this->throwExceptionInvalidHandle();
-
-        return stream_set_blocking($this->handel, 0);
+        return $this->setBlockingMode();
     }
 
     /** {@inheritdoc} */
@@ -102,7 +107,9 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     {
         $this->throwExceptionInvalidHandle();
 
-        $this->throwExceptionClosing(fclose($this->handel));
+        if (fclose($this->handel) === false) {
+            throw new ClosingException();
+        }
 
         $this->unsetHandle();
 
@@ -118,7 +125,7 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
             $this->flush();
         }
 
-        usleep((int) ($waitForReply * 1000000));
+        usleep((int)($waitForReply * 1000000));
     }
 
     /** {@inheritdoc} */
@@ -146,32 +153,48 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     {
         $this->throwExceptionInvalidHandle();
 
-        $this->throwExceptionSending(fwrite($this->handel, $this->buffer));
+        if (fwrite($this->handel, $this->buffer) === false) {
+            throw new SendingException();
+        }
 
         $this->clearBuffer();
     }
 
-    /** {@inheritdoc}*/
+    /**
+     * Set blocking/non-blocking mode on a stream.
+     *
+     * @param int $mode
+     *
+     * @return bool
+     */
+    public function setBlockingMode(int $mode = 0)
+    {
+        $this->throwExceptionInvalidHandle();
+
+        return stream_set_blocking($this->handel, $mode);
+    }
+
+    /** {@inheritdoc} */
     public function setBaudRate(int $rate)
     {
-        $this->throwExceptionInvalidRate($rate);
-
         $this->throwExceptionInvalidDevice();
+
+        $this->throwExceptionInvalidRate($rate);
 
         $this->executeBaudRate($rate);
     }
 
-    /** {@inheritdoc}*/
+    /** {@inheritdoc} */
     public function setParity($parity)
     {
-        $this->throwExceptionInvalidParity($parity);
-
         $this->throwExceptionInvalidDevice();
+
+        $this->throwExceptionInvalidParity($parity);
 
         $this->executeParity($parity);
     }
 
-    /** {@inheritdoc}*/
+    /** {@inheritdoc} */
     public function setCharacterLength(int $length)
     {
         $this->throwExceptionInvalidDevice();
@@ -187,7 +210,7 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
         $this->executeCharacterLength($length);
     }
 
-    /** {@inheritdoc}*/
+    /** {@inheritdoc} */
     public function setStopBits($length)
     {
         $this->throwExceptionInvalidDevice();
@@ -197,7 +220,7 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
         $this->executeStopBits($length);
     }
 
-    /** {@inheritdoc}*/
+    /** {@inheritdoc} */
     public function setFlowControl($mode)
     {
         $this->throwExceptionInvalidDevice();
@@ -227,14 +250,39 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
      */
     abstract protected function setHandel(string $device, string $mode);
 
+    /**
+     * @param int $rate
+     *
+     * @return mixed
+     */
     abstract protected function executeBaudRate(int $rate);
 
+    /**
+     * @param int $parity
+     *
+     * @return mixed
+     */
     abstract protected function executeParity(int $parity);
 
+    /**
+     * @param int $length
+     *
+     * @return mixed
+     */
     abstract protected function executeCharacterLength(int $length);
 
+    /**
+     * @param float $length
+     *
+     * @return mixed
+     */
     abstract protected function executeStopBits(float $length);
 
+    /**
+     * @param string $mode
+     *
+     * @return mixed
+     */
     abstract protected function executeFlowControl(string $mode);
 
     /**

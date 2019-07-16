@@ -2,6 +2,9 @@
 
 namespace Sanchescom\Serial\Contracts;
 
+/**
+ * Interface ConfigInterface.
+ */
 interface ConfigInterface
 {
     /**
@@ -9,7 +12,7 @@ interface ConfigInterface
      * Possible rates : 110, 150, 300, 600, 1200, 2400, 4800, 9600, 38400,
      * 57600 and 115200.
      *
-     * @param  int  $rate the rate to set the port in
+     * @param  int $rate the rate to set the port in
      * @return bool
      */
     public function setBaudRate(int $rate);
@@ -27,7 +30,7 @@ interface ConfigInterface
     /**
      * Sets the length of a character.
      *
-     * @param  int  $length length of a character (5 <= length <= 8)
+     * @param  int $length length of a character (5 <= length <= 8)
      *
      * @return void
      */

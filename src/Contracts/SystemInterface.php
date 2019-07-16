@@ -2,6 +2,9 @@
 
 namespace Sanchescom\Serial\Contracts;
 
+/**
+ * Interface SystemInterface.
+ */
 interface SystemInterface
 {
     /**
@@ -23,8 +26,8 @@ interface SystemInterface
     /**
      * Send a string to the device.
      *
-     * @param string $message      String to be sent to the device
-     * @param float  $waitForReply Time to wait for the reply (in seconds)
+     * @param string $message String to be sent to the device
+     * @param float $waitForReply Time to wait for the reply (in seconds)
      */
     public function send(string $message, float $waitForReply = 0.1);
 
