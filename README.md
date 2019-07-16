@@ -66,6 +66,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## Authors
 
 * **Efimov Aleksandr** - *Refactoring and supporting work* - [Sanchescom](https://github.com/sanchescom)
+* **Rémy Sanchez** - *Initial work* - [Xowap](https://github.com/Xowap)
 
 See also the list of [contributors](https://github.com/sanchescom/php-serial/contributors) who participated in this project.
 
