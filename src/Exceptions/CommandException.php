@@ -27,7 +27,7 @@ class CommandException extends RuntimeException
      * @param string $output
      * @param int $returnCode
      */
-    public function __construct(string $command, string $output, int $returnCode)
+    public function __construct(string $command, string $output, $returnCode = 0)
     {
         if ($this->returnCode == 127) {
             $message = 'Command not found: "' . $command . '"';
