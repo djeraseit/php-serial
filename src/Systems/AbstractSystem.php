@@ -16,10 +16,7 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     use ExceptionTrait;
 
     /** @var int */
-    const DEFAULT_READ_INDEX = 0;
-
-    /** @var int */
-    const DEFAULT_READ_LENGTH = 128;
+    const DEFAULT_READ_LENGTH = 32;
 
     /** @var int */
     const MIN_CHARACTER_LENGTH = 5;
@@ -129,21 +126,17 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     }
 
     /** {@inheritdoc} */
-    public function read(int $count = 0)
+    public function read(int $limit = 0)
     {
         $this->throwExceptionInvalidHandle();
 
         $content = "";
-        $length = self::DEFAULT_READ_LENGTH;
-        $index = self::DEFAULT_READ_INDEX;
+
+        $length = $limit > 0 ? $limit : self::DEFAULT_READ_LENGTH;
 
         do {
-            if ($count !== self::DEFAULT_READ_INDEX && $index > $count) {
-                $length = $count - $index;
-            }
-
             $content .= fread($this->handel, $length);
-        } while (($index += self::DEFAULT_READ_LENGTH) === strlen($content));
+        } while ($length < strlen($content));
 
         return $content;
     }

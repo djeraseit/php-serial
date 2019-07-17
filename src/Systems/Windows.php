@@ -50,10 +50,10 @@ class Windows extends AbstractSystem
     /** {@inheritdoc} */
     protected function setDevice(string $device)
     {
-        if (preg_match("@^COM(\\d+):?$@i", $device, $matches) &&
-            $this->executor->command(self::$utility . " {$device} xon=on BAUD=9600") === 0
-        ) {
-            $this->device = "COM" . $matches[1];
+        $this->executor->command(self::$utility . " {$device} xon=on BAUD=9600");
+
+        if (preg_match("@^COM(\\d+):?$@i", $device, $matches) !== false) {
+            $this->device = $device;
         }
     }
 
@@ -63,6 +63,6 @@ class Windows extends AbstractSystem
      */
     protected function setHandel(string $device, string $mode)
     {
-        $this->handel = fopen("\\." . strtolower($device), $mode);
+        $this->handel = fopen(strtolower($device), $mode);
     }
 }

@@ -29,10 +29,10 @@ class Executor implements ExecutorInterface
         $result = proc_close($process);
 
         if ($result !== 0) {
-            throw new CommandException($command, $error, $return);
+            throw new CommandException($command, $return, $error);
         }
 
-        return $return;
+        return [$return, $error];
     }
 
     /** {@inheritdoc} */

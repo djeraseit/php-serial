@@ -34,11 +34,11 @@ interface SystemInterface
     /**
      * Read the port until no new data are available, then return the content.
      *
-     * @param int $count Number of characters to be read (will stop before
+     * @param int $limit Number of characters to be read (will stop before
      *                   if less characters are in the buffer)
      * @return string
      */
-    public function read(int $count = 0);
+    public function read(int $limit = 0);
 
     /**
      * Flush the output buffer.
