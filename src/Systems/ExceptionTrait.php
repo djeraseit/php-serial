@@ -14,28 +14,28 @@ trait ExceptionTrait
 {
     protected function throwExceptionInvalidRate($rate)
     {
-        if (!isset(self::$validBauds[$rate])) {
+        if (!isset(static::$validBauds[$rate])) {
             throw new InvalidRateException($rate);
         }
     }
 
     protected function throwExceptionInvalidParity($parity)
     {
-        if (!isset(self::$partyArgs[$parity])) {
+        if (!isset(static::$partyArgs[$parity])) {
             throw new InvalidParityException($parity);
         }
     }
 
     protected function throwExceptionInvalidFlowControl($mode)
     {
-        if (!isset(self::$flowControls[$mode])) {
+        if (!isset(static::$flowControls[$mode])) {
             throw new InvalidFlowControlException($mode);
         }
     }
 
     protected function throwExceptionStopBit($length)
     {
-        if (!in_array($length, self::$validStopBitsLength)) {
+        if (!in_array($length, static::$validStopBitsLength)) {
             throw new InvalidStopBitException($length);
         }
     }

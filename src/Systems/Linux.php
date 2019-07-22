@@ -21,7 +21,7 @@ class Linux extends AbstractSystem
     }
 
     /** {@inheritdoc} */
-    protected function executeParity(int $parity)
+    protected function executeParity(string $parity)
     {
         $this->executor->command(self::$utility . " -F {$this->device} " . self::$partyArgs[$parity]);
     }

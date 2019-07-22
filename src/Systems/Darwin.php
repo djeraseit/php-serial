@@ -16,7 +16,7 @@ class Darwin extends AbstractSystem
     }
 
     /** {@inheritdoc} */
-    protected function executeParity(int $parity)
+    protected function executeParity(string $parity)
     {
         $this->executor->command(self::$utility . " -f {$this->device} " . self::$partyArgs[$parity]);
     }

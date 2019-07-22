@@ -251,11 +251,11 @@ abstract class AbstractSystem implements ConfigInterface, SystemInterface
     abstract protected function executeBaudRate(int $rate);
 
     /**
-     * @param int $parity
+     * @param string $parity
      *
      * @return mixed
      */
-    abstract protected function executeParity(int $parity);
+    abstract protected function executeParity(string $parity);
 
     /**
      * @param int $length

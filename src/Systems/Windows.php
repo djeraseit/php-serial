@@ -24,7 +24,7 @@ class Windows extends AbstractSystem
     }
 
     /** {@inheritdoc} */
-    protected function executeParity(int $parity)
+    protected function executeParity(string $parity)
     {
         $this->executor->command(self::$utility . " {$this->device} PARITY=" . $parity[0]);
     }
